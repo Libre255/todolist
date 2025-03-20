@@ -1,9 +1,8 @@
-import { createTableColumn, Table, TableBody, TableColumnDefinition, TableHeader, TableHeaderCell, TableRow, TableSelectionCell, useTableFeatures, useTableSelection } from '@fluentui/react-components';
-import React from 'react';
+import { createTableColumn, Spinner, Table, TableColumnDefinition, TableHeader, TableHeaderCell, TableRow, TableSelectionCell, useTableFeatures, useTableSelection } from '@fluentui/react-components';
+import React, { useCallback } from 'react';
 import { todosMockData } from './MockDataTodo';
 import { ItemType, Props } from './TodoTableTypes';
-//CRUD = CREATE, READ, UPDATE, DELET
-
+import TableContent from './TableContent';
 
 const columns:TableColumnDefinition<ItemType>[] = [
     createTableColumn<ItemType>({
@@ -19,45 +18,43 @@ const columns:TableColumnDefinition<ItemType>[] = [
         columnId:"delet"
     }),
 ]
-
-const TodoTable: React.FC<Props> = ({ }) => {
-  const { getRows, selection: {
+//need to change mockdata once real data comes in
+const TodoTable: React.FC<Props> = ({ setOpenEdit, setselectedTodo, todoListData, loading }) => {
+  const tableConfig = useTableFeatures(
+    {
+        columns,
+        items: todosMockData
+    }, 
+    [
+        useTableSelection({
+            selectionMode:"multiselect"
+        })
+    ])
+  const {selection: {
             allRowsSelected,
             someRowsSelected,
-            toggleRow,
-            isRowSelected
-            }
-        } = useTableFeatures({
-            columns,
-            items:todosMockData
-        }, [
-            useTableSelection({
-                selectionMode:"multiselect"
-            })
-        ])
+            toggleAllRows,
+         }} = tableConfig
   
-  const rows = getRows(row => {
-    const selected = isRowSelected(row.rowId);
-
-    return {
-        ...row,
-        onClick: (e:React.MouseEvent)=> toggleRow(e, row.rowId),
-        onKeyDown: (e:React.KeyboardEvent) => {
-            if(e.key === ""){
-                e.preventDefault();
-                toggleRow(e, row.rowId)
-            }
-        },
-        selected,
-        appearance: selected ? ("brand" as const): ("none" as const)
-    }
-  })        
     
+  const toggleAllKeydown = useCallback((e: React.KeyboardEvent<HTMLDivElement>)=>{
+    if(e.key === " "){
+        toggleAllRows(e);
+        e.preventDefault();
+    }
+  }, [])
+
+  if(loading) return <Spinner/>
   return (
     <Table aria-label="Table with multiselect" style={{ minWidth: "550px" }}>
         <TableHeader>
             <TableRow>
-                <TableSelectionCell/>
+                <TableSelectionCell
+                    checked={ allRowsSelected ? true : someRowsSelected ? "mixed" : false }
+                    onClick={toggleAllRows}
+                    onKeyDown={toggleAllKeydown}
+                    checkboxIndicator={{"aria-label": "Select all rows"}}
+                />
 
                 <TableHeaderCell>Title</TableHeaderCell>
                 <TableHeaderCell>Last Updated</TableHeaderCell>
@@ -65,9 +62,11 @@ const TodoTable: React.FC<Props> = ({ }) => {
                 <TableHeaderCell>Delet</TableHeaderCell>
             </TableRow>
         </TableHeader>
-        <TableBody>
-            {}
-        </TableBody>
+        <TableContent 
+            tableConfig={tableConfig}
+            setOpenEdit={setOpenEdit}
+            setselectedTodo={setselectedTodo}
+            loading={loading}/>
     </Table>
   );
 };

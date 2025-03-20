@@ -1,15 +1,17 @@
 export type Props = {
-  // Define your props here
+  setOpenEdit: React.Dispatch<React.SetStateAction<boolean>>;
+  setselectedTodo:  React.Dispatch<React.SetStateAction<ItemType | undefined>>;
+  todoListData: ItemType[];
+  loading: boolean;
 };
 
-export type titleCell = {
-    label:string;
-}
 export type lastupdatedCell = {
-    label:string;
+    content:string;
 }
 
 export type ItemType = {
-    title:titleCell;
-    lastupdate:lastupdatedCell;
+    id:string;
+    title:string;
+    content:string;
+    lastupdate:string;
 }
